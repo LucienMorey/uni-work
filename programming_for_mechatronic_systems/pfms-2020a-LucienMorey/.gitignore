@@ -1,0 +1,16 @@
+# Build Directories
+build/
+*-build/
+build-*/
+
+# QT Build Artifacts
+CMakeLists.txt.use*
+
+#VS Code Artifacts
+ipch/
+
+# MATLAB 
+*.m~
+
+# vscode files
+.vscode/
