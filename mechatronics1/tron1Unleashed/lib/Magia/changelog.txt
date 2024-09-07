@@ -1,0 +1,12 @@
+Magia release notes
+
+Semantical Versioning, http://semver.org/
+-------------------------------------------------------------------------------
+
+v1.0.0 2019-04-25
+
+Initial release:
+    * Currently just a library that includes I2C init and write functions
+    * Hardcoded SCL frequency is 100KHz for XTAL = 16MHz
+    * Write functions are blocking and include a 100ms timeout
+    * Write functions will try to fix the I2C bus if a problem is detected

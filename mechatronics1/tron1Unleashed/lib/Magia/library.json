@@ -1,0 +1,10 @@
+{
+    "name": "Magia",
+    "build": {
+        "flags": [
+            "-L $PROJECT_DIR/lib/Magia", 
+            "-l Magia"
+        ],
+        "libArchive": false
+    }    
+}

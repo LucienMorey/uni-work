@@ -1,0 +1,23 @@
+Amica - pure_c source code release changelog
+
+Semantical Versioning, http://semver.org/
+-------------------------------------------------------------------------------
+
+v1.1.0 2019-04-25
+
+Changes:
+    * Added Magia library
+
+-------------------------------------------------------------------------------
+
+v1.0.1 2019-04-25
+
+Changes:
+    * More comments, beter usage of iom328p.h
+    * Added upload_port to platformio.ini
+
+-------------------------------------------------------------------------------
+
+v1.0.0 2019-04-17
+
+Initial release

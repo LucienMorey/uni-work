@@ -1,0 +1,73 @@
+
+/*!
+
+*/
+
+// without this gap between two doxygen definition, the last group does not get
+// populated properly for some reason.
+
+/*!
+@mainpage Assignment 4 - Individual Project - Path Following
+
+This package implements path tracking for a circular base robot by either pure pursuit or pointing to a target and tracking. \n
+
+@section abstract Abstract
+@subsection navigator Navigator
+The Navigator  object is a high level control object for interfacing with a robot. It is capable of receiving a path and tracking all valid path points along the path and will publish a map with path progress constantly as control actions are called. The navigator class contains interfaces directly with ROS. when creating a naviagaotr Object callbacks are setup automatically to facilitate robot control with up to date data. To commence control a thread should be started that executes the controlThread function in navigator.
+@subsection path_following Path Following
+There are two path following methods supplied with this package, PurePursuit and PointShoot. Each tracker is derived from a virtual PathTracker class\n \n
+Point and shoot will constantly check position error to a goal pose. If it is greater than an acceptable tolerance it will first rotatethe robot until its heading matches the heading to the desired pose and drive until within an acceptable tolerance. Once this process has been completed it will rotate to the specified goal heading co complete the path segment. \n \n
+Pure Pursuit first checks to see if it is within an angle tolerance to the goal position if it is not it will rotate until it is. Once this check passes, it will commence tracking the path by parameterising curvature to the goal with linear and angular velocity. Once the goal has been reached remaining angle error to a specified pose will be corrected.
+
+@subsection expected_sub_pub Expected Subscribers and Publishers
+    \verbatim
+Subscribes to                       Publishes to
+/robot_0/odom/                      /robot_0/cmd_vel/
+/robot_0/base_scan/ -> Navigator -> /map_image/path_following/
+/path/
+/map_image/full/
+
+    \endverbatim
+@section classlist Class List
+PathTracker \n
+PurePursuit \n
+PointShoot \n
+Navigator \n
+
+@section libList Helper Libraries
+GeometryUtility \n
+ImageProcessing \n
+
+@section Building  Buildng and Running the Package
+Copy the project into the src dir of a catkin workspace then change to the root directoryof the catkin_ws.
+Once in the root w directory the project can be built with catkin_make via the command
+    \verbatim
+catkin_make
+    \endverbatim
+THe tests can also be built from the same directory with
+    \verbatim
+catkin_make tests
+    \endverbatim
+Assuming the workspace is in your PATH then the package can be executed with
+    \verbatim
+rosrun pfms_assignment_5_12904090 pfms_assignment_5_12904090-main
+    \endverbatim
+This command will boot the tracker up in Point shoot mode. the following commanfs can also be used to specify the tracking method manually
+    \verbatim
+rosrun pfms_assignment_5_12904090 pfms_assignment_5_12904090-main _pursuit_method:=pointshoot
+    \endverbatim
+    or
+        \verbatim
+rosrun pfms_assignment_5_12904090 pfms_assignment_5_12904090-main _pursuit_method:=purepursuit
+    \endverbatim
+
+The test suite can be run with
+    \verbatim
+rosrun pfms_assignment_5_12904090 pfms_assignment_5_12904090-test
+    \endverbatim
+
+@n Lucien Morey
+@n 12904090
+@n 21/6/2020
+
+*/

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pose_pursuit</name>
+  <version>0.0.0</version>
+  <description>The pose_pursuit package</description>
+
+  <maintainer email="lucienp@live.com.au">lucien</maintainer>
+
+
+  <license>TODO</license>
+
+  <author email="lucienp@live.com.au">Lucien Morey</author>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <build_depend>tf</build_depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+
+</package>

@@ -1,0 +1,6 @@
+[submodule "lib/jlm"]
+	path = lib/jlm
+	url = git@github.com:LucienMorey/jlm
+[submodule "lib/LiquidCrystal"]
+	path = lib/LiquidCrystal
+	url = git@github.com:LucienMorey/LiquidCrystal

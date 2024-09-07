@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+
+import rospy
+from geometry_msgs.msg import Pose, Twist, PoseWithCovarianceStamped, PoseArray
+from tf.transformations import euler_from_quaternion
+from nav_msgs.msg import Odometry
+from math import copysign
+import numpy as np
+import math
+
+class PosePursuit:
+    def __init__(self):
+
+        # initialise ROS node
+        rospy.init_node('pose_pursuit')
+
+        # current x, y, a position
+        self.x = 0
+        self.y = 0
+        self.theta = 0
+
+        self.x_goal = 0
+        self.y_goal = 0
+        self.theta_goal = 0
+
+        # controller gains
+        self.Kp_rho = 0.45
+        self.Kp_alpha = 0.05
+        self.Kp_beta = -0.05
+        self.Kp_angular = 0.45
+
+        # target pose tolerances
+        self.angular_tolerance = 10      # degrees
+        self.linear_tolerance = 0.1     # meters 
+
+        # velocity bounds
+        self.linear_vel_bound = 0.16
+        self.angular_vel_bound = 1.2
+
+        # velocity to output
+        self.velocity = Twist()
+
+        # pose array for path message
+        self.pose_array = []
+
+        # publisher
+        self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=2)
+
+        # subscriber
+        self.odom_sub = rospy.Subscriber('amcl_pose', PoseWithCovarianceStamped, self.amcl_pose_callback)
+        self.pose_goal_sub = rospy.Subscriber('path', PoseArray, self.pose_array_goal_callback)
+
+        
+
+    def update_current_pose_goal(self):
+        
+        self.x_goal = self.pose_array[0].position.x
+        self.y_goal = self.pose_array[0].position.y
+        rot_q = (
+            self.pose_array[0].orientation.x,
+            self.pose_array[0].orientation.y,
+            self.pose_array[0].orientation.z,
+            self.pose_array[0].orientation.w)
+
+        (roll_goal, pitch_goal, self.theta_goal) = euler_from_quaternion(rot_q)
+
+        # delete the current target from the array after we set it
+        # next loop the next element will be at the front
+        del self.pose_array[0]
+
+    
+    def amcl_pose_callback(self, msg):
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+        rot_q = (
+            msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y,
+            msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w)
+
+        (roll_current, pitch_current, self.theta) = euler_from_quaternion(rot_q)
+
+        if(self.x_goal ==0) and (self.y_goal ==0) and (self.theta_goal == 0):
+            self.x_goal=self.x
+            self.y_goal=self.y
+            self.theta_goal=self.theta
+        
+
+    def pose_array_goal_callback(self, msg):
+        # path PoseArray from path planner
+        # poses are loaded into list
+        
+        for pose in msg.poses:
+            self.pose_array.append(pose)
+        print("Recieved PoseArray")
+        print("{} path nodes found\n" .format(len(msg.poses)))
+
+        
+    def pose_goal_callback(self, msg):
+        self.x_goal = msg.position.x
+        self.y_goal = msg.position.y
+        rot_q = (
+                msg.orientation.x,
+                msg.orientation.y,
+                msg.orientation.z,
+                msg.orientation.w
+                )
+        (roll_goal, pitch_goal, self.theta_goal) = euler_from_quaternion(rot_q)
+
+    def move_to_pose(self):
+        
+        x_diff = self.x_goal - self.x
+        y_diff = self.y_goal - self.y
+
+        # rho is the distance to the next target pose
+        rho = (np.sqrt(x_diff**2 + y_diff**2))
+
+        # the absolute angle of the path between current pose and target pose
+        theta_path = math.atan2(y_diff, x_diff)
+        theta_path_error = theta_path - self.theta
+        theta_error = self.theta_goal - self.theta
+
+        '''
+        # Restrict alpha and beta (angle differences) to the range
+        # [-pi, pi] to prevent unstable behavior e.g. difference going
+        # from 0 rad to 2*pi rad with slight turn
+        alpha = (np.arctan2(y_diff, x_diff) - self.theta + np.pi) % (2 * np.pi) - np.pi
+        beta = (self.theta_goal - self.theta - alpha + np.pi) % (2 * np.pi) - np.pi
+        self.velocity.linear.x = self.Kp_rho * rho
+        self.velocity.angular.z = self.Kp_alpha * alpha + self.Kp_beta * beta
+        if alpha > np.pi / 2 or alpha < -np.pi / 2:
+            self.velocity.linear.x = -self.velocity.linear.x
+        '''
+
+        if (theta_path_error > np.pi):
+            theta_path_error -= 2 * np.pi
+        elif (theta_path_error < -np.pi):
+            theta_path_error += 2 * np.pi
+
+
+        if (abs(theta_error) and (len(self.pose_array) == 0)):
+            self.velocity.linear.x = 0.0
+            self.velocity.angular.z = theta_error * self.Kp_angular * 0.4
+        # first check angular error
+        elif (abs(theta_path_error) > math.radians(self.angular_tolerance)):
+            self.velocity.linear.x = 0.0
+            self.velocity.angular.z = theta_path_error * self.Kp_angular
+
+        # check distance error
+        elif (rho > self.linear_tolerance):
+            self.velocity.angular.z = 0.0
+            self.velocity.linear.x = np.sqrt(rho) * self.Kp_rho
+
+        
+        
+        # otherwise set zero velocity and increment to the next pose in the list
+        else:
+            self.velocity.linear.x = 0.0
+            self.velocity.angular.z = 0.0
+            if len(self.pose_array) > 0:
+                self.update_current_pose_goal()
+
+        # check that all the velocities are within the bounds
+        # if not crop them to max
+        if (abs(self.velocity.linear.x) > self.linear_vel_bound):
+            self.velocity.linear.x = copysign(self.linear_vel_bound, self.velocity.linear.x)
+
+        if (abs(self.velocity.angular.z) > self.angular_vel_bound):
+            self.velocity.angular.z = copysign(self.angular_vel_bound, self.velocity.angular.z)
+
+    
+        # publish velocity msg
+        # print some relevant values
+        self.velocity_pub.publish(self.velocity)
+        #print("X: {:<6} Y: {:<6} THETA: {:<6} RHO: {:<6} ALPHA: {:<6} BETA: {:<6}\r" .format(round(self.x, 3), round(self.y, 3), round(self.theta, 3), round(rho, 3), round(alpha, 3), round(beta, 3))),
+        print("X: {:<6} Y: {:<6} THETA: {:<6} RHO: {:<6} THETA_ER: {:<6} THETA_PATH_E: {:<6}\r" .format(round(self.x, 3), round(self.y, 3), round(self.theta, 3), round(rho, 3), round(theta_error, 3), round(theta_path_error, 3))),
+
+
+if __name__ == '__main__':
+    
+    pose_pursuit = PosePursuit()
+    r = rospy.Rate(10)
+    
+    try:
+        while not rospy.is_shutdown():            
+            pose_pursuit.move_to_pose()
+            r.sleep()
+            
+    except Exception as fail:
+        print(fail)

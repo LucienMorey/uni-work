@@ -1,0 +1,54 @@
+
+/*!
+
+*/
+
+// without this gap between two doxygen definition, the last group does not get
+// populated properly for some reason.
+
+/*!
+@mainpage Assignment 2 - Utilising Abstraction for a Range of Sensor Classes 
+
+This program is designed to implement the tasks as outlined in the Programming for Mechatronic Systems Assignment 2. \n
+
+@section abstract abstract
+@subsection ranger Ranger
+A Ranger is an abstract class designed to implement various rangefinding sensor types. The implementation of raner reflects the strengths of OOP and class based systems as they promote code reuse and remove unneccesary clutter. For this assignment a Laser and Sonar were implemtned as subclasses of a Ranger. Each Share most of their attributes and fucntions with only slight variation in the implementation of allowable parameters and data generation. Both subclasses can be simulated as pointers from the parent classes making the system more flexible
+
+@subsection fusion Fusion
+Sensor Fusion is the process of combining sensor readings in some way to get more accurate or correct results. For the sake of this assignment cells (rectangles) were generated in a cartesian space for simulation with the rangefinding sensors. 
+Depending on the reading each ranger provides, cells can be identified as free and occupied or remain undefined if not encompassed within a reading. This code was designed in a conservative way to bias having interacted with a cell. If one sensor notes it as free or undefined and another notes it as occupied then the final result will be an occupied cell.
+@section classlist Class List
+Ranger \n
+RangerFusion \n
+Laser \n
+Sonar \n
+@section Usage Using the program
+@subsection Building  Buildng the project
+When in the root directory of the assignment create a build directory 
+    \verbatim
+mkdir build
+    \endverbatim
+Now that the directory has been created chnge into it
+    \verbatim
+cd build
+    \endverbatim
+Finally, configure cmake to build the project.
+    \verbatim
+cmake ../src
+    \endverbatim
+Now whenever you are in the build directory you can run the following to build the project
+    \verbatim
+make
+    \endverbatim
+@subsection Running Running the project
+After completing "Building the project" you can use the following command to run the most recent build of the project:
+    \verbatim
+./assignment2
+    \endverbatim
+    
+Lucien Morey
+12904090
+26/4/2020
+
+*/
